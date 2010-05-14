@@ -17,6 +17,10 @@ module ActiveRecord
         require 'active_record/connection_adapters/sqlserver_adapter/core_ext/odbc'
         raise ArgumentError, 'Missing :dsn configuration.' unless config.has_key?(:dsn)
       when :adonet
+        if config[:integrated_security]
+          config.delete :username
+          config.delete :password
+        end
         require 'System.Data'
         raise ArgumentError, 'Missing :database configuration.' unless config.has_key?(:database)
       when :ado
@@ -768,7 +772,7 @@ module ActiveRecord
                           connection.connection_string = System::Data::SqlClient::SqlConnectionStringBuilder.new.tap do |cs|
                             cs.user_i_d = config[:username] if config[:username]
                             cs.password = config[:password] if config[:password]
-                            cs.integrated_security = true if config[:integrated_security] == 'true'
+                            cs.integrated_security = true if config[:integrated_security]
                             cs.add 'Server', config[:host].to_clr_string
                             cs.initial_catalog = config[:database]
                             cs.multiple_active_result_sets = false
